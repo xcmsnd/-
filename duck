@@ -1,3 +1,21 @@
+-- ============================================
+-- 保留部分：重进游戏 & 踢出游戏（不要修改）
+-- ============================================
+local queueteleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
+local KeepInfYield = true
+local TeleportCheck = false
+if queueteleport then
+    game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
+        if KeepInfYield and not TeleportCheck then
+            TeleportCheck = true
+            queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/xcmsnd/-/refs/heads/main/duck'))()")
+        end
+    end)
+end
+
+-- ============================================
+-- 并行：UI 自动购买（不阻塞主逻辑）
+-- ============================================
 task.spawn(function()
     while true do
         pcall(function()
@@ -26,6 +44,9 @@ task.spawn(function()
     end
 end)
 
+-- ============================================
+-- 服务定义
+-- ============================================
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
@@ -38,6 +59,9 @@ local ClientIsDragging = Interaction:WaitForChild("ClientIsDragging")
 
 local activeDragConnections = {}
 
+-- ============================================
+-- 工具函数
+-- ============================================
 function notify(title, text, dur)
     dur = dur or 3
     pcall(function()
@@ -80,6 +104,9 @@ function clearDragConnections()
     activeDragConnections = {}
 end
 
+-- ============================================
+-- 土地加载判断（间隔 0.05 秒）
+-- ============================================
 function waitForLand()
     notify("等待", "正在加载土地...")
     while true do
@@ -91,6 +118,7 @@ function waitForLand()
                     local origin = p:FindFirstChild("OriginSquare")
                     if origin and origin:IsA("BasePart") then
                         notify("成功", "土地已加载")
+                        -- 返回地面高度，不再 +10
                         return origin.CFrame
                     end
                 end
@@ -100,6 +128,9 @@ function waitForLand()
     end
 end
 
+-- ============================================
+-- 加载存档（Slot 1）
+-- ============================================
 local open = game:GetService("Players").LocalPlayer.PlayerGui.MenuGUI.Open
 repeat task.wait() until open.Visible == true
 
@@ -117,6 +148,9 @@ end
 task.wait(1)
 local homeCF = waitForLand()
 
+-- ============================================
+-- 传送到收银台
+-- ============================================
 function goToCashier()
     local store = Workspace.Stores:FindFirstChild("PlantomicsChoice")
     if not store then return false end
@@ -148,6 +182,9 @@ function getClickSequence(y)
     }
 end
 
+-- ============================================
+-- 核心：监听到鸭子 → 拖拽1秒 → 一起回基地
+-- ============================================
 function handleDuck(duckModel)
     if not duckModel or not duckModel.Parent then return false end
     
@@ -164,12 +201,14 @@ function handleDuck(duckModel)
     clearDragConnections()
     notify("成功", "监听到天堂鸭，开始建立拖拽...")
     
+    -- 传送到鸭子旁边准备拖拽
     local duckPos = mainPart.Position
     hrp.CFrame = CFrame.new(duckPos + Vector3.new(0, 2, 0))
     hrp.Velocity = Vector3.new()
     hrp.RotVelocity = Vector3.new()
     task.wait(0.2)
     
+    -- 阶段1：先疯狂发送拖拽，持续1秒建立连接
     local dragConn = RunService.Heartbeat:Connect(function()
         if duckModel and duckModel.Parent then
             ClientIsDragging:FireServer(duckModel, PAYLOAD)
@@ -191,19 +230,24 @@ function handleDuck(duckModel)
     
     notify("提示", "连接已建立，开始传送回基地...")
     
+    -- 阶段2：强制传送 Main 零件到基地 + 持续发送拖拽
+    -- 不锁定鸭子的任何物理属性（Velocity/RotVelocity 等），让它自然下落
     local tpConn = RunService.Heartbeat:Connect(function()
         if duckModel and duckModel.Parent then
             ClientIsDragging:FireServer(duckModel, PAYLOAD)
+            -- 鸭子贴地传送（homeCF 是地面，+1 让它稍微离地自然落下）
             mainPart.CFrame = homeCF + Vector3.new(0, 1, 0)
             duckModel:PivotTo(homeCF + Vector3.new(0, 1, 0))
         end
     end)
     table.insert(activeDragConnections, tpConn)
     
+    -- 玩家立刻传回基地上方
     hrp.CFrame = homeCF + Vector3.new(0, 5, 0)
     hrp.Velocity = Vector3.new()
     hrp.RotVelocity = Vector3.new()
     
+    -- 持续锁定 2 秒确保鸭子稳定
     for i = 1, 120 do
         if not duckModel.Parent then break end
         ClientIsDragging:FireServer(duckModel, PAYLOAD)
@@ -214,6 +258,7 @@ function handleDuck(duckModel)
     
     clearDragConnections()
     
+    -- 最终确认鸭子位置（不恢复 CanCollide，不修改任何物理属性）
     if duckModel and duckModel.Parent then
         mainPart.CFrame = homeCF + Vector3.new(0, 1, 0)
         duckModel:PivotTo(homeCF + Vector3.new(0, 1, 0))
@@ -223,6 +268,9 @@ function handleDuck(duckModel)
     return true
 end
 
+-- ============================================
+-- 主循环：3轮尝试
+-- ============================================
 task.spawn(function()
     task.wait(1)
     notify("开始", "正在获取天堂鸭...")
@@ -264,17 +312,14 @@ task.spawn(function()
                     pcall(function() connection:Disconnect() end)
                     notify("完成", "天堂鸭已获取，3秒后重进...")
                     task.wait(3)
-                    local queueteleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
-if queueteleport then  
-    game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
-        queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/xcmsnd/-/refs/heads/main/duck'))()")
-    end)
-end
+                    
+                    -- ============================================
+                    -- 保留部分：重进游戏 & 踢出游戏（不要修改）
+                    -- ============================================
                     game:GetService("TeleportService"):Teleport(game.PlaceId)
+                    -- 等待3秒让传送完成，避免 Kick 太快打断
                     task.wait()
-                    game.Players.LocalPlayer:Kick("自动天堂鸭/小中脚本")
-                    wait()
-                    game:GetService("TeleportService"):Teleport(game.PlaceId)
+                    game.Players.LocalPlayer:Kick("自动天堂鸭/n小中脚本")
                     return
                 end
                 task.wait(0.1)
@@ -286,17 +331,13 @@ end
         task.wait(0.5)
     end
     
+    -- ============================================
+    -- 保留部分：重进游戏 & 踢出游戏（不要修改）
+    -- ============================================
     notify("未找到", "5秒后跳转至下一个服务器...")
     task.wait(5)
-    local queueteleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
-if queueteleport then 
-    game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
-        queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/xcmsnd/-/refs/heads/main/duck'))()")
-    end)
-end
     game:GetService("TeleportService"):Teleport(game.PlaceId)
+    -- 等待3秒让传送完成，避免 Kick 太快打断
     task.wait()
-    game.Players.LocalPlayer:Kick("自动天堂鸭/小中脚本")
-    wait()
-    game:GetService("TeleportService"):Teleport(game.PlaceId)
+    game.Players.LocalPlayer:Kick("自动天堂鸭/n小中脚本")
 end)
