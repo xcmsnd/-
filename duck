@@ -272,7 +272,7 @@ if queueteleport then
 end
                     game:GetService("TeleportService"):Teleport(game.PlaceId)
                     task.wait()
-                    game.Players.LocalPlayer:Kick("自动天堂鸭/n小中脚本")
+                    game.Players.LocalPlayer:Kick("自动天堂鸭/小中脚本")
                     wait()
                     game:GetService("TeleportService"):Teleport(game.PlaceId)
                     return
@@ -296,7 +296,7 @@ if queueteleport then
 end
     game:GetService("TeleportService"):Teleport(game.PlaceId)
     task.wait()
-    game.Players.LocalPlayer:Kick("自动天堂鸭/n小中脚本")
+    game.Players.LocalPlayer:Kick("自动天堂鸭/小中脚本")
     wait()
     game:GetService("TeleportService"):Teleport(game.PlaceId)
 end)
