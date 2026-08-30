@@ -1,8 +1,3 @@
-local queueteleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
-    game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
-            queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/xcmsnd/-/refs/heads/main/duck'))()")
-    end)
-
 task.spawn(function()
     while true do
         pcall(function()
@@ -269,7 +264,12 @@ task.spawn(function()
                     pcall(function() connection:Disconnect() end)
                     notify("完成", "天堂鸭已获取，3秒后重进...")
                     task.wait(3)
-                    
+                    local queueteleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
+if queueteleport then  
+    game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
+        queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/xcmsnd/-/refs/heads/main/duck'))()")
+    end)
+end
                     game:GetService("TeleportService"):Teleport(game.PlaceId)
                     task.wait()
                     game.Players.LocalPlayer:Kick("自动天堂鸭/n小中脚本")
@@ -288,6 +288,12 @@ task.spawn(function()
     
     notify("未找到", "5秒后跳转至下一个服务器...")
     task.wait(5)
+    local queueteleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
+if queueteleport then 
+    game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(State)
+        queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/xcmsnd/-/refs/heads/main/duck'))()")
+    end)
+end
     game:GetService("TeleportService"):Teleport(game.PlaceId)
     task.wait()
     game.Players.LocalPlayer:Kick("自动天堂鸭/n小中脚本")
